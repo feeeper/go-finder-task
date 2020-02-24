@@ -12,15 +12,13 @@ import (
 
 func main() {
 	wg := &sync.WaitGroup{}
-	ch := make(chan int)
+	ch := make(chan string, 5)
 	scanner := bufio.NewScanner(os.Stdin)
+	counter := 0
+	mutex := new(sync.Mutex)
 
-	i := 0
-	for scanner.Scan() {
-		wg.Add(1)
-		url := scanner.Text()
-		i += 1
-		go func(address string) {
+	go func() {
+		for url := range ch {
 			resp, err := http.Get(url)
 			if err != nil {
 				_ = fmt.Errorf(err.Error())
@@ -29,12 +27,28 @@ func main() {
 			if err != nil {
 				_ = fmt.Errorf(err.Error())
 			}
-			fmt.Println(url, "\t", len(strings.Split(string(body), "Go"))-1)
+			count := len(strings.Split(string(body), "Go")) - 1
+			fmt.Println(url, "\t", count)
+
+			mutex.Lock()
+			counter += count
+			mutex.Unlock()
 
 			wg.Done()
+		}
+	}()
+
+	for scanner.Scan() {
+		wg.Add(1)
+
+		url := scanner.Text()
+		go func(url string) {
+			ch <- url
 		}(url)
 	}
 
 	wg.Wait()
 	close(ch)
+
+	fmt.Println("Total: ", "\t", counter)
 }
