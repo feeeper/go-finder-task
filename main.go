@@ -10,10 +10,6 @@ import (
 	"sync"
 )
 
-func getGoOccurances(url string) (int, error) {
-	return 0, nil
-}
-
 func main() {
 	wg := &sync.WaitGroup{}
 	ch := make(chan int)
