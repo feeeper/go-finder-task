@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strings"
+	"regexp"
 	"sync"
 )
 
@@ -16,6 +16,7 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	counter := 0
 	mutex := new(sync.Mutex)
+	regex := regexp.MustCompile("Go")
 
 	go func() {
 		for url := range ch {
@@ -27,7 +28,8 @@ func main() {
 			if err != nil {
 				_ = fmt.Errorf(err.Error())
 			}
-			count := len(strings.Split(string(body), "Go")) - 1
+			matches := regex.FindAllString(string(body), -1)
+			count := len(matches)
 			fmt.Println(url, "\t", count)
 
 			mutex.Lock()
