@@ -10,31 +10,42 @@ import (
 	"sync"
 )
 
+func getOccurances(url string) (int, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return 0, err
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return 0, err
+	}
+
+	regex := regexp.MustCompile("Go")
+	matches := regex.FindAllString(string(body), -1)
+	count := len(matches)
+
+	return count, nil
+}
+
 func main() {
 	wg := &sync.WaitGroup{}
 	ch := make(chan string, 5)
 	scanner := bufio.NewScanner(os.Stdin)
 	counter := 0
 	mutex := new(sync.Mutex)
-	regex := regexp.MustCompile("Go")
 
 	go func() {
 		for url := range ch {
-			resp, err := http.Get(url)
+			count, err := getOccurances(url)
 			if err != nil {
-				_ = fmt.Errorf(err.Error())
+				fmt.Println(err.Error())
+			} else {
+				fmt.Println(url, "\t", count)
+				mutex.Lock()
+				counter += count
+				mutex.Unlock()
 			}
-			body, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				_ = fmt.Errorf(err.Error())
-			}
-			matches := regex.FindAllString(string(body), -1)
-			count := len(matches)
-			fmt.Println(url, "\t", count)
-
-			mutex.Lock()
-			counter += count
-			mutex.Unlock()
 
 			wg.Done()
 		}
