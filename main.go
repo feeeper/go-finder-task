@@ -82,5 +82,5 @@ func main() {
 
 	close(ch)
 	wg.Wait()
-	fmt.Fprintf(os.Stdout, "Total: \t%d", counter)
+	fmt.Fprintf(os.Stdout, "Total: \t%d\n", counter)
 }
