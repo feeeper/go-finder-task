@@ -35,8 +35,7 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	counter := 0
 	mutex := new(sync.Mutex)
-	maxConcurrency := 5
-	urls := []string{}
+	maxConcurrency := 2
 
 	// ^C handling
 	interrupts := make(chan os.Signal, 1)
@@ -55,38 +54,29 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Reading from stdin
+	// Reading from stdin and process urls
+	urlCount := 0
 	for scanner.Scan() {
 		url := scanner.Text()
-		urls = append(urls, url)
-	}
-
-	// Total count of goroutines should be equal or less then total count of urls
-	concurrency := maxConcurrency
-	if len(urls) < maxConcurrency {
-		concurrency = len(urls)
-	}
-
-	// Get occurances and update total counter
-	for i := 0; i < concurrency; i++ {
-		wg.Add(1)
-		go func() {
-			for url := range ch {
-				count, err := getOccurances(url)
-				if err != nil {
-					fmt.Println(err.Error())
-				} else {
-					fmt.Println(url, "\t", count)
-					mutex.Lock()
-					counter += count
-					mutex.Unlock()
+		urlCount += 1
+		if maxConcurrency >= urlCount {
+			wg.Add(1)
+			go func() {
+				for url := range ch {
+					count, err := getOccurances(url)
+					if err != nil {
+						fmt.Println(err.Error())
+					} else {
+						fmt.Println(url, "\t", count)
+						mutex.Lock()
+						counter += count
+						mutex.Unlock()
+					}
 				}
-			}
-			wg.Done()
-		}()
-	}
+				wg.Done()
+			}()
+		}
 
-	for _, url := range urls {
 		ch <- url
 	}
 
