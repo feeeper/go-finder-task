@@ -42,7 +42,7 @@ func main() {
 	signal.Notify(interrupts, os.Interrupt)
 	go func() {
 		for _ = range interrupts {
-			fmt.Println("Total: ", "\t", counter)
+			fmt.Fprintf(os.Stdout, "Total: \t%d\n", counter)
 			os.Exit(1)
 		}
 	}()
@@ -50,7 +50,7 @@ func main() {
 	// Exit on empty input
 	stat, _ := os.Stdin.Stat()
 	if (stat.Mode() & os.ModeCharDevice) != 0 {
-		fmt.Println("Invalid input")
+		fmt.Fprintf(os.Stderr, "Invalid input\n")
 		os.Exit(1)
 	}
 
@@ -65,9 +65,9 @@ func main() {
 				for url := range ch {
 					count, err := getOccurances(url)
 					if err != nil {
-						fmt.Println(err.Error())
+						fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 					} else {
-						fmt.Println(url, "\t", count)
+						fmt.Fprintf(os.Stdout, "%s\t%d\n", url, count)
 						mutex.Lock()
 						counter += count
 						mutex.Unlock()
@@ -82,5 +82,5 @@ func main() {
 
 	close(ch)
 	wg.Wait()
-	fmt.Println("Total: ", "\t", counter)
+	fmt.Fprintf(os.Stdout, "Total: \t%d", counter)
 }
