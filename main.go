@@ -66,6 +66,7 @@ func main() {
 					count, err := getOccurances(url)
 					if err != nil {
 						fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+						fmt.Fprintf(os.Stdout, "%s\t0\n", url)
 					} else {
 						fmt.Fprintf(os.Stdout, "%s\t%d\n", url, count)
 						mutex.Lock()
